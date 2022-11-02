@@ -1,4 +1,4 @@
-CC=g++
+CC=mpicxx #g++
 #mpicxx
 #-std=c++11
 CFLAGS = -Iinc -W -Wall -pedantic #-ltiff
