@@ -8,9 +8,8 @@ class imageManager
         char headerInfo[3];
         int width, height, colorDepth;
         unsigned char* image;
-        int* imageEdgeDetection;
+        int* outputImage;
         std::string fileName;
-        bool edgeDetectionCalled;
 
     public:
         imageManager(std::string Name);

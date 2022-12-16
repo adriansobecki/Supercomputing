@@ -5,8 +5,7 @@
 imageManager::imageManager(std::string Name):
 fileName(Name),
 image(nullptr),
-imageEdgeDetection(nullptr),
-edgeDetectionCalled(false)
+outputImage(nullptr)
 {
     headerInfo[2] = '\0';
 }
@@ -15,8 +14,8 @@ imageManager::~imageManager()
 {
     if(image)
         free(image);
-    if(imageEdgeDetection)
-        free(imageEdgeDetection);
+    if(outputImage)
+        free(outputImage);
 }
 
 bool imageManager::loadImage()
@@ -45,29 +44,20 @@ bool imageManager::loadImage()
 
 bool imageManager::saveImage()
 {
+    if(outputImage == nullptr)
+        return false;
+
     FILE *Result;
-    std::string newFileName;
-    if(std::string(headerInfo)=="P5")
-        newFileName = fileName.substr(0, fileName.size()-3)+"pgm";
-    else
-        newFileName = fileName;
+    std::string newFileName = fileName.substr(0, fileName.size()-3)+"pgm";
 
     Result = fopen(newFileName.c_str(), "wb");
     if(Result == NULL)
         return false;
 
-    if(!edgeDetectionCalled)
-    {
-        fprintf(Result, "P5\n%d %d\n%d\n", width, height, colorDepth);
-        for(int i=0; i<width*height*3;i+=3)
-            fprintf(Result, "%c", image[i]);
-    }
-    else
-    {
-        fprintf(Result, "P5\n%d %d\n%d\n", width-2, height-2, colorDepth);
-        for(int i=0; i<(width-2)*(height-2);i++)
-            fprintf(Result, "%c", static_cast<unsigned char>(imageEdgeDetection[i]));
-    }
+    fprintf(Result, "P5\n%d %d\n%d\n", width, height, colorDepth);
+
+    for(int i=0; i<width*height;i++)
+        fprintf(Result, "%c", static_cast<unsigned char>(outputImage[i]));
 
     fclose(Result);
     return true;
@@ -75,52 +65,47 @@ bool imageManager::saveImage()
 
 bool imageManager::toMonochrome()
 {
+    if(outputImage == nullptr)
+        outputImage = (int*)malloc(sizeof(int)*(width)*(height));
+
     if(std::string(headerInfo)=="P6")
     {
+        int k = 0;
         for(int i=0; i<width*height*3;i+=3)
-            image[i] = image[i]/3 + image[i+1]/3 + image[i+2]/3;
+            outputImage[k++] = int(image[i]/3 + image[i+1]/3 + image[i+2]/3);
 
         headerInfo[1] = '5';
         return true;
     }
-    else
-        return false;
+
+    return false;
 }
 
 bool imageManager::thresholding(int threshold)
 {
+    if(outputImage == nullptr)
+        return false;
+
     if(std::string(headerInfo)=="P5")
     {
-        if(!edgeDetectionCalled)
+        for(int i=0; i<width*height;i++)
         {
-            for(int i=0; i<width*height*3;i+=3)
-            {
-                if(image[i]>threshold)
-                    image[i] = 255;
-                else
-                    image[i] = 0;
-            }
-            return true;
+            if(outputImage[i]>threshold)
+                outputImage[i] = 255;
+            else
+                outputImage[i] = 0;
         }
-        else
-        {
-            for(int i=0; i<(width-2)*(height-2);i++)
-            {
-                if(imageEdgeDetection[i]>threshold)
-                    imageEdgeDetection[i] = 255;
-                else
-                    imageEdgeDetection[i] = 0;
-            }
-            return true;
-        }
+        return true;
     }
-    else
-        return false;
+    return false;
 }
 
 bool imageManager::edgeDetection()
 {
-    imageEdgeDetection = (int*)malloc(sizeof(int)*(width-2)*(height-2)); //unsigned char*
+    if(outputImage == nullptr)
+        return false;
+
+    int* imageEdgeDetection = (int*)malloc(sizeof(int)*(width-2)*(height-2)); //unsigned char*
     if(std::string(headerInfo)=="P5")
     {
         int z = 0;
@@ -128,9 +113,9 @@ bool imageManager::edgeDetection()
         max = min = 0;
         for(int k=1;k<height-1;k++)
         {
-            for(int i=3;i<width*3-3;i+=3)
+            for(int i=1;i<width-1;i++)
             {
-                int val = static_cast<int>(image[i+k*width*3])*(-8) + static_cast<int>(image[(i-3)+(k-1)*width*3]) + static_cast<int>(image[(i)+(k-1)*width*3]) + static_cast<int>(image[(i+3)+(k-1)*width*3]) + static_cast<int>(image[(i-3)+k*width*3]) + static_cast<int>(image[(i+3)+k*width*3]) + static_cast<int>(image[(i-3)+(k+1)*width*3]) + static_cast<int>(image[(i)+(k+1)*width*3]) + static_cast<int>(image[(i+3)+(k+1)*width*3]);
+                int val = static_cast<int>(outputImage[i+k*width])*(-8) + static_cast<int>(image[(i-1)+(k-1)*width]) + static_cast<int>(image[(i)+(k-1)*width]) + static_cast<int>(image[(i+1)+(k-1)*width]) + static_cast<int>(image[(i-1)+k*width]) + static_cast<int>(image[(i+1)+k*width]) + static_cast<int>(image[(i-1)+(k+1)*width]) + static_cast<int>(image[(i)+(k+1)*width]) + static_cast<int>(image[(i+1)+(k+1)*width]);
                 //image[i+k*width*3] = (val + 8 * 255)/16;
                 //imageEdgeDetection[z] = static_cast<unsigned char>((val + 8 * 255)/16);
                 //std::cout << val << '\n';
@@ -146,12 +131,21 @@ bool imageManager::edgeDetection()
         }
         double diff = max - min;
         double scale = 255/diff;
-        for(int i=0; i<(width-2)*(height-2);i++)
+
+        width = width - 2;
+        height = height - 2;
+
+        if(outputImage != nullptr)
         {
-            imageEdgeDetection[i] = int((double(imageEdgeDetection[i]-min)*scale));
+            free(outputImage);
+            outputImage = (int*)malloc(sizeof(int)*(width)*(height));
         }
+
+        for(int i=0; i<(width)*(height);i++)
+            outputImage[i] = int((double(imageEdgeDetection[i]-min)*scale));
+            
+        free(imageEdgeDetection);
         //std::cout << max << " "<< min << "\n";
-        edgeDetectionCalled = true;
         return true;
     }
     else

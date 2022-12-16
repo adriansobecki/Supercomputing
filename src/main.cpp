@@ -20,8 +20,6 @@ int main(int argc, char *argv[])
 
     //std::cout << "\nVideo manager:\n1 - To monochrome\n2 - Thresholding\n3 - Edge detection\n";
     //while(!(std::cin >> userChoice) || !(userChoice>0 && userChoice<4)){std::cin.clear();std::cin.ignore();}  
-
-    //std::cout << "Please wait...\n";
     //std::cout << amountOfFiles << " " << filesPerProcessor <<  " " << rank*filesPerProcessor+1 << " " <<  rank*filesPerProcessor+1+filesPerProcessor;
     auto start = std::chrono::steady_clock::now();
     for(int i=rank*filesPerProcessor+1; i<=rank*filesPerProcessor+filesPerProcessor;i++)
