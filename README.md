@@ -11,7 +11,7 @@ How to run:
   ```sh
   make
   ```
-* Run script with path to video (if needed run 'chmod +x run.sh')
+* Run script with path to video and amount of processors (if needed run 'chmod +x run.sh')
   ```sh
-  ./run /path/to/video (np. ./run data/20221031_155122.mp4)
+  ./run /path/to/video (e.g. ./run data/20221031_155122.mp4 4)
   ```
