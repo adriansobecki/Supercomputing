@@ -115,7 +115,7 @@ bool imageManager::edgeDetection()
         {
             for(int i=1;i<width-1;i++)
             {
-                int val = static_cast<int>(outputImage[i+k*width])*(-8) + static_cast<int>(image[(i-1)+(k-1)*width]) + static_cast<int>(image[(i)+(k-1)*width]) + static_cast<int>(image[(i+1)+(k-1)*width]) + static_cast<int>(image[(i-1)+k*width]) + static_cast<int>(image[(i+1)+k*width]) + static_cast<int>(image[(i-1)+(k+1)*width]) + static_cast<int>(image[(i)+(k+1)*width]) + static_cast<int>(image[(i+1)+(k+1)*width]);
+                int val = static_cast<int>(outputImage[i+k*width])*(-8) + static_cast<int>(outputImage[(i-1)+(k-1)*width]) + static_cast<int>(outputImage[(i)+(k-1)*width]) + static_cast<int>(outputImage[(i+1)+(k-1)*width]) + static_cast<int>(outputImage[(i-1)+k*width]) + static_cast<int>(outputImage[(i+1)+k*width]) + static_cast<int>(outputImage[(i-1)+(k+1)*width]) + static_cast<int>(outputImage[(i)+(k+1)*width]) + static_cast<int>(outputImage[(i+1)+(k+1)*width]);
                 //image[i+k*width*3] = (val + 8 * 255)/16;
                 //imageEdgeDetection[z] = static_cast<unsigned char>((val + 8 * 255)/16);
                 //std::cout << val << '\n';
@@ -142,7 +142,8 @@ bool imageManager::edgeDetection()
         }
 
         for(int i=0; i<(width)*(height);i++)
-            outputImage[i] = int((double(imageEdgeDetection[i]-min)*scale));
+            outputImage[i] = int((double(imageEdgeDetection[i])));
+            //outputImage[i] = int((double(imageEdgeDetection[i]-min)*scale));
             
         free(imageEdgeDetection);
         //std::cout << max << " "<< min << "\n";

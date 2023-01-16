@@ -30,7 +30,10 @@ int main(int argc, char *argv[])
         if(userChoice==2)
             test.thresholding();
         else if(userChoice==3)
+        {
             test.edgeDetection();
+            test.thresholding(40);
+        }
             
         test.saveImage();
     }
